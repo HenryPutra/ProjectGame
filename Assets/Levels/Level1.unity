@@ -4399,10 +4399,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96e74f204998f5949876f3665702420f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 7
-  groundLayer:
+  moveSpeed: 5
+  jumpForce: 10
+  jumpableGround:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 0
 --- !u!95 &523049178
 Animator:
   serializedVersion: 5
@@ -9636,29 +9637,29 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 523049172}
-          m_TargetAssemblyTypeName: 
-          m_MethodName: 
-          m_Mode: 1
+        - m_Target: {fileID: 523049177}
+          m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
+          m_MethodName: MoveRight
+          m_Mode: 6
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: 
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
             m_StringArgument: 
-            m_BoolArgument: 0
+            m_BoolArgument: 1
           m_CallState: 2
   - eventID: 3
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 523049172}
-          m_TargetAssemblyTypeName: 
-          m_MethodName: 
-          m_Mode: 1
+        - m_Target: {fileID: 523049177}
+          m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
+          m_MethodName: MoveRight
+          m_Mode: 6
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: 
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
             m_StringArgument: 
@@ -13876,13 +13877,13 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 523049172}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
+      - m_Target: {fileID: 523049177}
+        m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
+        m_MethodName: MobileJump
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -17865,9 +17866,9 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 523049172}
-          m_TargetAssemblyTypeName: UnityEngine.MonoBehaviour, UnityEngine
-          m_MethodName: 
+        - m_Target: {fileID: 523049177}
+          m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
+          m_MethodName: MoveLeft
           m_Mode: 6
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -17882,8 +17883,8 @@ MonoBehaviour:
       m_PersistentCalls:
         m_Calls:
         - m_Target: {fileID: 523049177}
-          m_TargetAssemblyTypeName: UnityEngine.MonoBehaviour, UnityEngine
-          m_MethodName: set_runInEditMode
+          m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
+          m_MethodName: MoveLeft
           m_Mode: 6
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
