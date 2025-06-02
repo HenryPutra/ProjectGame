@@ -10,18 +10,19 @@ public class loadscene : MonoBehaviour
         SceneManager.LoadScene(scene);
     }
 
+    public void quitGame() // Renamed for clarity, but you can keep the old name if you want.
+    {
+        // Instead of quitting the application, load the "Main Menu" scene.
+        SceneManager.LoadScene("Main Menu");
+    }
+
     public void paused()
     {
         Time.timeScale = 0;
     }
-    
+
     public void resume()
     {
         Time.timeScale = 1;
-    }
-
-    public void quitGame()
-    {
-        Application.Quit();
     }
 }

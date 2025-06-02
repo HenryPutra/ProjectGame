@@ -61,28 +61,27 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleKeyboardInput()
     {
-        // Keyboard input akan mengoverride button input
-        bool keyboardInputActive = false;
+        // Reset horizontal input hanya jika tidak ada input dari button atau keyboard
+        bool hasKeyboardInput = false;
         
         // Check for movement input (A and D keys)
         if (Input.GetKey(KeyCode.A))
         {
             horizontalInput = -1;
-            keyboardInputActive = true;
+            hasKeyboardInput = true;
         }
         else if (Input.GetKey(KeyCode.D))
         {
             horizontalInput = 1;
-            keyboardInputActive = true;
+            hasKeyboardInput = true;
         }
-        else
+        
+        // Jika tidak ada input keyboard, biarkan button input bekerja
+        // (horizontalInput akan diatur oleh method MoveLeft/MoveRight/StopMove)
+        if (!hasKeyboardInput && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
         {
-            // Jika tidak ada keyboard input, reset ke 0
-            // Button input akan mengatur ulang nilai ini jika diperlukan
-            if (!keyboardInputActive)
-            {
-                horizontalInput = 0;
-            }
+            // horizontalInput akan tetap sesuai dengan button yang ditekan
+            // Tidak di-reset ke 0 di sini
         }
         
         // Check for jump input (W key or Space)
@@ -119,27 +118,10 @@ public class PlayerMovement : MonoBehaviour
         return raycastHit.collider != null;
     }
 
-    // Method untuk mobile input (keyboard akan mengoverride ini)
-    public void MoveLeft() 
-    {
-        // Hanya set jika tidak ada keyboard input yang aktif
-        if (!Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
-            horizontalInput = -1;
-    }
-    
-    public void MoveRight() 
-    {
-        // Hanya set jika tidak ada keyboard input yang aktif
-        if (!Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
-            horizontalInput = 1;
-    }
-    
-    public void StopMove() 
-    {
-        // Hanya set jika tidak ada keyboard input yang aktif
-        if (!Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
-            horizontalInput = 0;
-    }
+    // Method untuk mobile input (tetap dipertahankan untuk kompatibilitas)
+    public void MoveLeft() => horizontalInput = -1;
+    public void MoveRight() => horizontalInput = 1;
+    public void StopMove() => horizontalInput = 0;
     public void JumpButton()
     {
         if (isGrounded()) jumpPressed = true;

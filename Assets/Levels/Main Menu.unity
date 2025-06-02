@@ -391,6 +391,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca088e7645e06f24d9e72fd4c4f3aed0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mainMenuSceneName: MainMenu
+  levelSelectSceneName: LevelSelect
 --- !u!114 &1632470612
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -534,7 +536,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 876b3723d22a65f44b5e4b4e45de9752, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d5451471582fa6e47be5a9283f05e98d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
