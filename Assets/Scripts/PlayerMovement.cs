@@ -1,165 +1,166 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using TMPro;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [Header("Player Movement")]
-    public float moveSpeed = 5f;
-    public float runSpeed = 8f;
-    public float jumpForce = 10f;
-
+    [SerializeField] private float speed;
+    [SerializeField] private LayerMask groundLayer;
+    [SerializeField] private int maxHealth = 100;
+    [SerializeField] private TextMeshProUGUI healthText;
+    
+    private int currentHealth;
     private Rigidbody2D rb;
     private Animator anim;
-    private SpriteRenderer sprite;
-    private PlayerController playerController; // tambahkan PlayerInputActions
-
-    // Untuk input dari button UI
-    private float mobileInputX = 0f;
-
-    private Vector2 moveInput;
-    private bool isJumping = false;
-
-    private enum MovementState { idle, walk, jump, fall, run}
-
-    [Header("Jump Settings")]
-    [SerializeField] private LayerMask jumpableGround;
-    private BoxCollider2D coll;
+    private BoxCollider2D boxCollider;
+    private float horizontalInput;
+    private bool jumpPressed;
+    private Knockback knockback;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
-        sprite = GetComponent<SpriteRenderer>();
-        coll = GetComponent<BoxCollider2D>();
-
-        playerController = new PlayerController(); //Inisialisasi PlayerInputActions
+        boxCollider = GetComponent<BoxCollider2D>();
+        knockback = GetComponent<Knockback>();
     }
 
-    private void OnEnable()
+    private void Start()
     {
-        playerController.Enable();
-
-        playerController.Movement.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
-        playerController.Movement.Move.canceled += ctx => moveInput = Vector2.zero;
-
-        playerController.Movement.Jump.performed += ctx => Jump();
-
-        
-    }
-
-    private void OnDisable()
-    {
-        playerController.Disable();
+        currentHealth = maxHealth;
+        UpdateHealthUI();
     }
 
     private void Update()
     {
-        // Jika menggunakan mobile input, pakai itu
-        if (Application.isMobilePlatform)
+        // Handle keyboard input
+        HandleKeyboardInput();
+        
+        if (knockback != null && knockback.GettingKnockedBack) return;
+        
+        rb.velocity = new Vector2(horizontalInput * speed, rb.velocity.y);
+        
+        // Handle player facing direction
+        if (horizontalInput > 0.01f)
+            transform.localScale = Vector3.one;
+        else if (horizontalInput < -0.01f)
+            transform.localScale = new Vector3(-1, 1, 1);
+
+        // Handle jumping
+        if (jumpPressed)
         {
-            moveInput = new Vector2(mobileInputX, 0f);
+            Jump();
+            jumpPressed = false;
+        }
+
+        // Update animations
+        anim.SetBool("run", horizontalInput != 0);
+        anim.SetBool("grounded", isGrounded());
+    }
+
+    private void HandleKeyboardInput()
+    {
+        // Keyboard input akan mengoverride button input
+        bool keyboardInputActive = false;
+        
+        // Check for movement input (A and D keys)
+        if (Input.GetKey(KeyCode.A))
+        {
+            horizontalInput = -1;
+            keyboardInputActive = true;
+        }
+        else if (Input.GetKey(KeyCode.D))
+        {
+            horizontalInput = 1;
+            keyboardInputActive = true;
         }
         else
         {
-            // Kalau bukan mobile, pakai Input System
-            moveInput = playerController.Movement.Move.ReadValue<Vector2>();
+            // Jika tidak ada keyboard input, reset ke 0
+            // Button input akan mengatur ulang nilai ini jika diperlukan
+            if (!keyboardInputActive)
+            {
+                horizontalInput = 0;
+            }
         }
-
-    }
-
-    private void FixedUpdate()
-    {
-        //gabungan mobile
-        Vector2 targetVelocity = new Vector2((moveInput.x + mobileInputX) * moveSpeed, rb.velocity.y);
-        rb.velocity = targetVelocity;
-
-        UpdateAnimation();
-
-        // Reset isJumping hanya saat grounded dan velocity Y mendekati 0
-        if (isGrounded() && Mathf.Abs(rb.velocity.y) < 0.01f)
+        
+        // Check for jump input (W key or Space)
+        if ((Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.Space)) && isGrounded())
         {
-            isJumping = false;
+            jumpPressed = true;
         }
-
-    }
-
-    private void UpdateAnimation()
-    {
-        MovementState state;
-
-        // Gabungkan input dari keyboard dan mobile
-        float horizontal = moveInput.x != 0 ? moveInput.x : mobileInputX;
-
-        // Cek arah jalan
-        if (horizontal > 0f)
+        
+        // S key bisa digunakan untuk aksi tambahan jika diperlukan
+        // Misalnya untuk crouch atau fast fall
+        if (Input.GetKey(KeyCode.S))
         {
-            state = MovementState.walk;
-            sprite.flipX = false;
+            // Tambahkan logika untuk S key jika diperlukan
+            // Contoh: rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f); // Fast fall
         }
-        else if (horizontal < 0f)
-        {
-            state = MovementState.walk;
-            sprite.flipX = true;
-        }
-        else
-        {
-            state = MovementState.idle;
-        }
-
-        // Cek apakah sedang lompat atau jatuh
-        if (rb.velocity.y > 0.1f)
-        {
-            state = MovementState.jump;
-        }
-        else if (rb.velocity.y < -0.1f)
-        {
-            state = MovementState.fall;
-        }
-
-        anim.SetInteger("state", (int)state);
-    }
-
-
-    private bool isGrounded()
-    {
-        return Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.down, .1f, jumpableGround);
     }
 
     private void Jump()
     {
-        // Cek ulang grounded saat ini, dan jangan gunakan isJumping (karena bisa delay)
-        if (isGrounded())
+        rb.velocity = new Vector2(rb.velocity.x, speed);
+        anim.SetTrigger("jump");
+    }
+
+    private bool isGrounded()
+    {
+        RaycastHit2D raycastHit = Physics2D.BoxCast(
+            boxCollider.bounds.center,
+            boxCollider.bounds.size,
+            0,
+            Vector2.down,
+            0.1f,
+            groundLayer
+        );
+        return raycastHit.collider != null;
+    }
+
+    // Method untuk mobile input (keyboard akan mengoverride ini)
+    public void MoveLeft() 
+    {
+        // Hanya set jika tidak ada keyboard input yang aktif
+        if (!Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+            horizontalInput = -1;
+    }
+    
+    public void MoveRight() 
+    {
+        // Hanya set jika tidak ada keyboard input yang aktif
+        if (!Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+            horizontalInput = 1;
+    }
+    
+    public void StopMove() 
+    {
+        // Hanya set jika tidak ada keyboard input yang aktif
+        if (!Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+            horizontalInput = 0;
+    }
+    public void JumpButton()
+    {
+        if (isGrounded()) jumpPressed = true;
+    }
+
+    public void TakeDamage(int damage)
+    {
+        if (knockback != null && knockback.GettingKnockedBack) return;
+        
+        currentHealth -= damage;
+        if (currentHealth <= 0)
         {
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
-            isJumping = true;
+            currentHealth = 0;
+            Debug.Log("Player Mati");
         }
+        UpdateHealthUI();
     }
 
-    // Fungsi ini dipanggil saat tombol kanan ditekan
-    public void MoveRight(bool isPressed)
+    private void UpdateHealthUI()
     {
-        if (isPressed)
-            mobileInputX = 1f;
-        else if (mobileInputX == 1f)
-            mobileInputX = 0f;
-    }
-
-    public void MoveLeft(bool isPressed)
-    {
-        if (isPressed)
-            mobileInputX = -1f;
-        else if (mobileInputX == -1f)
-            mobileInputX = 0f;
-    }
-
-    // Fungsi ini dipanggil saat tombol lompat ditekan
-    public void MobileJump()
-    {
-        if (isGrounded())
-        {
-            Jump();
-        }
+        if (healthText != null)
+            healthText.text = "Health: " + currentHealth;
     }
 }
