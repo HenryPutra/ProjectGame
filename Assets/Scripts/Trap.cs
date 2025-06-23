@@ -23,7 +23,7 @@ public class Trap : MonoBehaviour
             if (player != null)
             {
                 Debug.Log("Player found, applying damage: " + damage); // Debug damage
-                player.TakeDamage(damage);
+                player.TakeDamage(1);
                 
                 if (knockback != null)
                 {

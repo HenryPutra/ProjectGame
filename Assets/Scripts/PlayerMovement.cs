@@ -1,16 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
+using TMPro; // Tetap pakai jika masih ada coinText
 
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private float speed;
+    [SerializeField] private float jumpForce = 14f;
     [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private int maxHealth = 100;
-    [SerializeField] private TextMeshProUGUI healthText;
-    
-    private int currentHealth;
+    [SerializeField] private int maxHealth = 5; // Ubah ini menjadi jumlah hati/darah yang ingin Anda tampilkan
+    // [SerializeField] private TextMeshProUGUI healthText; // Hapus ini
+    [SerializeField] private TextMeshProUGUI coinText;
+
+    // Tambahkan referensi ke HealthUIController
+    [SerializeField] private HealthUIController healthUIController; 
+
+    private int coinCount = 0;
+    private int currentHealth; // Ini akan menjadi jumlah hati/darah saat ini
     private Rigidbody2D rb;
     private Animator anim;
     private BoxCollider2D boxCollider;
@@ -24,84 +30,75 @@ public class PlayerMovement : MonoBehaviour
         anim = GetComponent<Animator>();
         boxCollider = GetComponent<BoxCollider2D>();
         knockback = GetComponent<Knockback>();
+
+        // Pastikan healthUIController diinisialisasi
+        if (healthUIController == null)
+        {
+            Debug.LogError("HealthUIController not assigned in PlayerMovement. Please assign it in the Inspector.");
+        }
     }
 
     private void Start()
     {
         currentHealth = maxHealth;
-        UpdateHealthUI();
+        // Panggil UpdateHealthUI() dari healthUIController
+        if (healthUIController != null)
+        {
+            healthUIController.UpdateHealthDisplay(currentHealth);
+        }
+        UpdateCoinUI();
     }
 
     private void Update()
     {
-        // Handle keyboard input
         HandleKeyboardInput();
-        
-        if (knockback != null && knockback.GettingKnockedBack) return;
-        
-        rb.velocity = new Vector2(horizontalInput * speed, rb.velocity.y);
-        
-        // Handle player facing direction
-        if (horizontalInput > 0.01f)
-            transform.localScale = Vector3.one;
-        else if (horizontalInput < -0.01f)
-            transform.localScale = new Vector3(-1, 1, 1);
+        UpdateAnimationAndDirection();
 
-        // Handle jumping
         if (jumpPressed)
         {
             Jump();
             jumpPressed = false;
         }
+    }
 
-        // Update animations
-        anim.SetBool("run", horizontalInput != 0);
-        anim.SetBool("grounded", isGrounded());
+    private void FixedUpdate()
+    {
+        if (knockback != null && knockback.GettingKnockedBack)
+        {
+            return;
+        }
+        rb.velocity = new Vector2(horizontalInput * speed, rb.velocity.y);
     }
 
     private void HandleKeyboardInput()
     {
-        // Reset horizontal input hanya jika tidak ada input dari button atau keyboard
-        bool hasKeyboardInput = false;
-        
-        // Check for movement input (A and D keys)
-        if (Input.GetKey(KeyCode.A))
+        float keyboardHorizontal = Input.GetAxis("Horizontal");
+
+        if (keyboardHorizontal != 0)
         {
-            horizontalInput = -1;
-            hasKeyboardInput = true;
+            horizontalInput = keyboardHorizontal;
         }
-        else if (Input.GetKey(KeyCode.D))
-        {
-            horizontalInput = 1;
-            hasKeyboardInput = true;
-        }
-        
-        // Jika tidak ada input keyboard, biarkan button input bekerja
-        // (horizontalInput akan diatur oleh method MoveLeft/MoveRight/StopMove)
-        if (!hasKeyboardInput && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
-        {
-            // horizontalInput akan tetap sesuai dengan button yang ditekan
-            // Tidak di-reset ke 0 di sini
-        }
-        
-        // Check for jump input (W key or Space)
+
         if ((Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.Space)) && isGrounded())
         {
             jumpPressed = true;
         }
-        
-        // S key bisa digunakan untuk aksi tambahan jika diperlukan
-        // Misalnya untuk crouch atau fast fall
-        if (Input.GetKey(KeyCode.S))
-        {
-            // Tambahkan logika untuk S key jika diperlukan
-            // Contoh: rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f); // Fast fall
-        }
+    }
+
+    private void UpdateAnimationAndDirection()
+    {
+        if (horizontalInput > 0.01f)
+            transform.localScale = Vector3.one;
+        else if (horizontalInput < -0.01f)
+            transform.localScale = new Vector3(-1, 1, 1);
+
+        anim.SetBool("run", horizontalInput != 0);
+        anim.SetBool("grounded", isGrounded());
     }
 
     private void Jump()
     {
-        rb.velocity = new Vector2(rb.velocity.x, speed);
+        rb.velocity = new Vector2(rb.velocity.x, jumpForce);
         anim.SetTrigger("jump");
     }
 
@@ -118,31 +115,56 @@ public class PlayerMovement : MonoBehaviour
         return raycastHit.collider != null;
     }
 
-    // Method untuk mobile input (tetap dipertahankan untuk kompatibilitas)
-    public void MoveLeft() => horizontalInput = -1;
-    public void MoveRight() => horizontalInput = 1;
-    public void StopMove() => horizontalInput = 0;
-    public void JumpButton()
+    public void AddCoin(int amount)
     {
-        if (isGrounded()) jumpPressed = true;
+        coinCount += amount;
+        UpdateCoinUI();
+    }
+
+    public int GetCoinCount()
+    {
+        return coinCount;
+    }
+
+    private void UpdateCoinUI()
+    {
+        if (coinText != null)
+            coinText.text = coinCount.ToString(); // Cukup menampilkan angka
     }
 
     public void TakeDamage(int damage)
     {
         if (knockback != null && knockback.GettingKnockedBack) return;
-        
-        currentHealth -= damage;
+
+        currentHealth -= damage; // Asumsi setiap damage mengurangi 1 "hati"
         if (currentHealth <= 0)
         {
             currentHealth = 0;
             Debug.Log("Player Mati");
+            // Add logic for player death here (e.g., restart level, show game over screen)
         }
-        UpdateHealthUI();
+        // Panggil UpdateHealthDisplay dari healthUIController
+        if (healthUIController != null)
+        {
+            healthUIController.UpdateHealthDisplay(currentHealth);
+        }
     }
 
-    private void UpdateHealthUI()
+    // Hapus method UpdateHealthUI() ini, karena sekarang di handle oleh HealthUIController
+    // private void UpdateHealthUI()
+    // {
+    //     if (healthText != null)
+    //         healthText.text = "Health: " + currentHealth;
+    // }
+
+    public void MoveLeft() => horizontalInput = -1;
+    public void MoveRight() => horizontalInput = 1;
+    public void StopMove() => horizontalInput = 0;
+    public void JumpButton()
     {
-        if (healthText != null)
-            healthText.text = "Health: " + currentHealth;
+        if (isGrounded())
+        {
+            jumpPressed = true;
+        }
     }
 }
