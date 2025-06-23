@@ -130,6 +130,12 @@ GameObject:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
+  m_Component:
+  - component: {fileID: 128244997}
+  - component: {fileID: 128244996}
+  - component: {fileID: 128244995}
+  - component: {fileID: 128244994}
+  - component: {fileID: 128244993}
   - component: {fileID: 128244992}
   m_Layer: 6
   m_Name: enemy (1)
