@@ -26,7 +26,7 @@ public class FlagTrigger : MonoBehaviour
 
                 // Ubah teks sesuai permintaan
                 teksMenangLabel.text = "Level Complete";
-                koinTerkumpulLabel.text = "Coin Collected: " + jumlahKoin;
+                koinTerkumpulLabel.text = "Coin Collected " + jumlahKoin;
 
                 // Baru munculkan panelnya setelah semua teks di-update
                 panelMenang.SetActive(true);
@@ -34,10 +34,17 @@ public class FlagTrigger : MonoBehaviour
             }
         }
     }
-     public void LoadLevelDua()
+
+    public void LoadLevelDua()
     {
         Time.timeScale =1f;
-        SceneManager.LoadScene("Level2"); // Memuat scene dengan nama "Level_Dua"
+        SceneManager.LoadScene("Level2"); 
     }
+
+    public void LoadLevelTiga()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Level3");
+    }
 
 }
